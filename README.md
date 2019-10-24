@@ -5,7 +5,6 @@
 ### Overview
 
 ### User Guide
-
 Run the application in the terminal
 ```
 $ python3 db.py
@@ -25,7 +24,11 @@ Depending in the user type (agent or officer), numerical options will appear on 
 
 ## Software Design
 
+Major functions of the application
+
 ## Testing Strategy
+
+
 
 ## Group Work Breakdown
 October 21 - Harrison and Dalton: created meanus and functions for valid user login
