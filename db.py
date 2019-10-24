@@ -24,7 +24,7 @@ def get_login():
     while (not valid):
         username = input("Username: ")
         password = getpass.getpass()
-        cursor.execute(" SELECT * FROM users WHERE uid = ? and pwd = ?; ", (username, password)) 
+        cursor.execute(" SELECT * FROM users WHERE uid LIKE ? and pwd = ?; ", (username, password)) 
         user = cursor.fetchone()
 
         if user != None:
@@ -47,14 +47,15 @@ def display_menu(utype):
             valid = False
             
             while (not valid):
-                task = int(input("Enter a number: "))
-                if (task in range(1,7)):
-                    valid = True
-                else:
+                try:
+                    task = int(input("Enter a number: "))
+                except: # user did not enter a number
                     print("Please enter a valid option")
-                    
-                
-            return task
+                else:
+                    if (task in range(1,7)): # check if user entered a valid menu option
+                        valid = True
+                    else:
+                        print("Please enter a valid option")
         
         elif utype == 'o':
             print("1 - Issue a ticket")
@@ -62,19 +63,30 @@ def display_menu(utype):
             valid = False
             
             while (not valid):
-                task = int(input("Enter a number: "))
-                if (task in range(1,3)):
-                    valid = True
-                else:
+                try:
+                    task = int(input("Enter a number: "))
+                except: # user did not enter a number
                     print("Please enter a valid option")
-            return task + 6
-        
+                else:
+                    if (task in range(1,3)): # check if user entered a valid menu option
+                        valid = True
+                    else:
+                        print("Please enter a valid option")
+            task += 6 # officers options actually correlate to options 7 and 8
+        return task
 
         
 def register_birth(user_info):
 
     print("\nBirth registry")
-    reg_no = unique_registration()
+
+    valid = False
+    while(not valid):
+        reg_no = unique_registration()
+        cursor.execute("SELECT * FROM births WHERE regno = ?", (reg_no, ))
+        if not cursor.fetchone(): # check if any other births have the same reg_no
+            valid = True
+
     fname = input("First name: ") 
     lname = input("Last name: ")
     regplace = user_info[5]
@@ -82,23 +94,23 @@ def register_birth(user_info):
 
     m_fname = input("Mothers first name: ")
     m_lname = input("Mothers last name: ")
-    cursor.execute(" SELECT * FROM persons WHERE fname = ? and lname = ?; ", (m_fname, m_lname)) 
+    cursor.execute(" SELECT * FROM persons WHERE fname LIKE ? and lname LIKE ?; ", (m_fname, m_lname)) 
     mother = cursor.fetchone()
     if mother == None:
-        print("Mother's name not found in database. Redirecting to register mother...")
-        insert_person()
+        print("Mother's name not found in database. Redirecting to register mother...\n")
+        insert_person(m_fname, m_lname)
 
 
 
     f_fname = input("Fathers first name: ")
     f_lname = input ("Fathers last name: ")
-    cursor.execute(" SELECT * FROM persons WHERE fname = ? and lname = ?; ", (f_fname, f_lname)) 
+    cursor.execute(" SELECT * FROM persons WHERE fname LIKE ? and lname LIKE ?; ", (f_fname, f_lname)) 
     father = cursor.fetchone()
     if father == None:
-        print("Father's name not found in database. Redirecting to register father...")
-        insert_person()
+        print("Father's name not found in database. Redirecting to register father...\n")
+        insert_person(f_fname, f_lname)
     
-    cursor.execute("SELECT address, phone FROM persons WHERE fname = ? AND lname = ?", (m_fname, m_lname))
+    cursor.execute("SELECT address, phone FROM persons WHERE fname LIKE ? AND lname LIKE ?", (m_fname, m_lname))
     mothers_info = cursor.fetchone()
     address = mothers_info[0]
     phone = mothers_info[1]
@@ -136,10 +148,19 @@ def find_car_owner():
 def unique_registration():
 	return random.randint(0,9999)
 
-def insert_person():
+def insert_person(fname = None, lname = None):
     print("Registering a person")
-    fname = input("First name: ") 
-    lname = input("Last name: ")
+
+    if(fname is not None):
+        print("First name: {}".format(fname))
+    else:
+        fname = input("First name: ") # get fname if it is not provided
+
+    if(lname is not None):
+        print("Last name: {}".format(lname))
+    else:   
+        lname = input("Last name: ") # get lname if it is not provided
+
     bdate = input("Birth date: ")
     bplace = input("Birth place: ")
     address = input("Address: ")
@@ -156,7 +177,7 @@ def insert_person():
     cursor.execute("SELECT * FROM persons WHERE fname = ? AND lname = ?", (fname, lname))
     check = cursor.fetchone()
     if check != None:
-        print(fname + ' ' + lname + ' successfuly registered.')
+        print(fname + ' ' + lname + ' successfuly registered.\n')
 
     connection.commit()
 
