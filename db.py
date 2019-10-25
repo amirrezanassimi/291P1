@@ -1,6 +1,7 @@
 import sqlite3
 import getpass
 import random
+import re
 
 connection = None
 cursor = None
@@ -24,11 +25,14 @@ def get_login():
     while (not valid):
         username = input("Username: ")
         password = getpass.getpass()
-        cursor.execute(" SELECT * FROM users WHERE uid LIKE ? and pwd = ?; ", (username, password)) 
-        user = cursor.fetchone()
+        if (re.match('^[a-zA-Z0-9]*$', username) and re.match('^[a-zA-Z0-9]*$', password)):
+            cursor.execute(" SELECT * FROM users WHERE uid LIKE ? and pwd = ?; ", (username, password)) 
+            user = cursor.fetchone()
 
-        if user != None:
-            valid = True
+            if user != None:
+                valid = True
+            else:
+                print("Incorrect username or password")
         else:
             print("Incorrect username or password")
             
@@ -84,7 +88,7 @@ def register_birth(user_info):
     while(not valid):
         reg_no = unique_registration()
         cursor.execute("SELECT * FROM births WHERE regno = ?", (reg_no, ))
-        if not cursor.fetchone(): # check if any other births have the same reg_no
+        if (not cursor.fetchone()): # check if any other births have the same reg_no
             valid = True
 
     fname = input("First name: ") 
@@ -163,7 +167,14 @@ def register_marriage(user_info):
     connection.commit()
 	
 def renew_reg():
-    reg_no = input("Enter an existing registration number: ")
+    valid = False
+    while(not valid):
+        reg_no = input("Enter an existing registration number: ")
+        cursor.execute("SELECT * from registrations WHERE regno = ?", (reg_no, ))
+        if(cursor.fetchone()):
+            valid = True
+        else:
+            print("Registration number does not exist.\n")
 
     cursor.execute("SELECT * FROM registrations WHERE regno = ? and expiry <= date('now');",(reg_no, ))
     regData = cursor.fetchone()
