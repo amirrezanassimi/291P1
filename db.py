@@ -177,6 +177,7 @@ def renew_reg():
     return
 
 def bill_of_sale():
+    
     pass
 
 def process_payment():
