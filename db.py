@@ -192,13 +192,60 @@ def bill_of_sale():
     pass
 
 def process_payment():
-    pass
+    valid = False
+    while(not valid):
+        tick_no = input("Enter a ticket number: ")
+        cursor.execute("SELECT fine FROM tickets WHERE tno = ?;", (tick_no, ))
+        fine = cursor.fetchone()
+        if fine is not None:
+            valid = True
+        else:
+            print("Ticket number not found\n")
+    fine = fine[0]
+    cursor.execute("SELECT SUM(amount) FROM payments WHERE tno = ?;", (tick_no, ))
+    sumPayments = cursor.fetchone()
+    sumPayments = sumPayments[0]
+    if sumPayments is None:
+        sumPayments = 0
+    valid = False
+    while(not valid):
+        amount = int(input("Enter payment amount (integer): "))
+        if ((sumPayments + amount) <= fine):
+            valid = True
+        else:
+            print("Amount exceeds ticket fine.")
+    data = (tick_no, amount)
+    cursor.execute("INSERT INTO payments VALUES (?, date('now'), ?);", data)
+    
+    connection.commit()
+    return
 
 def get_driver_abstract():
+    fname = input("Enter first name: ")
+    lname = input("Enter last name: ")
+    
     pass
 
 def issue_ticket():
-    pass
+    reg_no = input("Enter a registration number: ")
+    cursor.execute("SELECT fname, lname, make, model, year, color FROM vehicles, registrations WHERE registrations.vin = vehicles.vin AND regno = ?;", (reg_no, ))
+    reg_info = cursor.fetchone()
+    print("\nName: {} {}\nMake: {}\nModel: {}\nYear: {}\nColor: {}".format(reg_info[0],reg_info[1],reg_info[2],reg_info[3],reg_info[4], reg_info[5]))
+
+    date = input("Enter date of violation: ")
+    desc = input("Enter violation description: ")
+    amount = input("Enter fine amount: ")
+    tno = unique_registration()
+
+    if (date == ''):
+        data = (tno, reg_no, amount, desc)
+        cursor.execute("INSERT INTO tickets VALUES (?, ?, ?, ?, date('now')); ", data)
+    else:
+        data = (tno, reg_no, amount, desc, date)
+        cursor.execute("INSERT INTO tickets VALUES (?, ?, ?, ?, ?); ", data)
+    
+    connection.commit()
+    return
 
 def find_car_owner():
     pass
