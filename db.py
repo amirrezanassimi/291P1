@@ -90,7 +90,10 @@ def register_birth(user_info):
     fname = input("First name: ") 
     lname = input("Last name: ")
     regplace = user_info[5]
-    gender = input("Gender: ")
+
+    valid = False
+    while(not valid):
+        gender = input("Gender: ")
 
     m_fname = input("Mothers first name: ")
     m_lname = input("Mothers last name: ")
@@ -130,18 +133,61 @@ def register_birth(user_info):
 	
 		   
     
-def register_marriage():
-    pass
+def register_marriage(user_info):
+    print("\n Marriage registration.\n")
+    valid = False
+    while(not valid):
+        reg_no = unique_registration()
+        cursor.execute("SELECT * FROM births WHERE regno = ?", (reg_no, ))
+        if not cursor.fetchone(): # check if any other births have the same reg_no
+            valid = True
+    p1_fname = input("p1 First name: ")
+    p1_lname = input("p1 Last name: ")
+    cursor.execute("SELECT * FROM persons WHERE fname LIKE ? AND lname LIKE?", (p1_fname, p1_lname))
+    p1_info = cursor.fetchone()
+    if p1_info == None:
+	    print("Person not found in databse. Redirecting to register...")
+	    insert_person(p1_fname, p1_lname)
+	
+    p2_fname = input("p2 First name: ")
+    p2_lname = input("p2 Last name: ")
+    cursor.execute("SELECT * FROM persons WHERE fname LIKE ? AND lname LIKE?", (p2_fname, p2_lname))
+    p2_info = cursor.fetchone()
+    if p2_info == None:
+	    print("Person not found in databse. Redirecting to register...")
+	    insert_person(p2_fname, p2_lname)
+    regplace = user_info[5]
+    data = (reg_no, regplace, p1_fname, p1_lname, p2_fname, p2_lname)
+	
+    cursor.execute("INSERT INTO marriages VALUES (?, date('now'), ?, ?, ?, ?, ?); ", data)
+    connection.commit()
+	
 def renew_reg():
-    pass
+    reg_no = input("Enter an existing registration number: ")
+
+    cursor.execute("SELECT * FROM registrations WHERE regno = ? and expiry <= date('now');",(reg_no, ))
+    regData = cursor.fetchone()
+
+    if regData is not None:
+        cursor.execute("UPDATE registrations SET expiry=date('now','+1 year') where regno=?;", (reg_no, ))
+    else:
+        cursor.execute("UPDATE registrations SET expiry = date(expiry, '+1 year') where regno = ?;", (reg_no, ))
+
+    connection.commit()
+    return
+
 def bill_of_sale():
     pass
+
 def process_payment():
     pass
+
 def get_driver_abstract():
     pass
+
 def issue_ticket():
     pass
+
 def find_car_owner():
     pass
 
@@ -191,7 +237,7 @@ def main():
     if task == 1:
         register_birth(user)
     elif task == 2:
-        register_marriage()
+        register_marriage(user)
     elif task == 3:
         renew_reg()
     elif task == 4:
