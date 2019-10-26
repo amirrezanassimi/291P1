@@ -38,7 +38,7 @@ def get_login():
             else:
                 print("Incorrect username or password. Please try again.")
         else:
-            print("Incorrect username or password. Please tey again")
+            print("Incorrect username or password. Please try again")
             
     connection.commit()
     return user
@@ -324,9 +324,9 @@ def main():
             os.system('clear')
             print("Sucessfully connected to database: " + path + "\n")
             user = get_login()
-            os.system('clear')
             logout = False
             while not logout:
+                os.system('clear')
                 print("Welcome " + user[3] + ".\n")
                 task = display_menu(user[2])
                 if task == 1:
