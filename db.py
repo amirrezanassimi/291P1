@@ -2,6 +2,7 @@ import sqlite3
 import getpass
 import random
 import re
+import os
 
 connection = None
 cursor = None
@@ -10,17 +11,21 @@ def connect_to_DB():
     global connection, cursor
   
     path = input("Enter path of database: ")
+    check_db = os.path.isfile(path)
+    if check_db:
+        connection = sqlite3.connect(path)
+        cursor = connection.cursor()
+        cursor.execute(' PRAGMA forteign_keys=ON; ')
+        connection.commit()
+        return check_db, path
+    else:
+        return check_db, path
     
-    connection = sqlite3.connect(path)
-    cursor = connection.cursor()
-    cursor.execute(' PRAGMA forteign_keys=ON; ')
-    connection.commit()
-    return
 
 def get_login():
     global connection, cursor
-    
 
+    print("Please enter your login credentials.")
     valid = False
     while (not valid):
         username = input("Username: ")
@@ -28,61 +33,68 @@ def get_login():
         if (re.match('^[a-zA-Z0-9]*$', username) and re.match('^[a-zA-Z0-9]*$', password)):
             cursor.execute(" SELECT * FROM users WHERE uid LIKE ? and pwd = ?; ", (username, password)) 
             user = cursor.fetchone()
-
             if user != None:
                 valid = True
             else:
-                print("Incorrect username or password")
+                print("Incorrect username or password. Please try again.")
         else:
-            print("Incorrect username or password")
+            print("Incorrect username or password. Please try again")
             
     connection.commit()
     return user
 
+
 def display_menu(utype):
-        if utype == 'a':
-            print("Which task would you like to perform?")
-            print("1 - Register a birth")
-            print("2 - Register a marriage")
-            print("3 - Renew vehicle registration")
-            print("4 - Process a bill of sale")
-            print("5 - Process a payment")
-            print("6 - Get a driver abstract")
-            valid = False
-            
-            while (not valid):
-                try:
-                    task = int(input("Enter a number: "))
-                except: # user did not enter a number
-                    print("Please enter a valid option")
-                else:
-                    if (task in range(1,7)): # check if user entered a valid menu option
-                        valid = True
-                    else:
-                        print("Please enter a valid option")
+    global connection, cursor
+
+    if utype == 'a':
+        print("Which task would you like to perform?")
+        print("1 - Register a birth")
+        print("2 - Register a marriage")
+        print("3 - Renew vehicle registration")
+        print("4 - Process a bill of sale")
+        print("5 - Process a payment")
+        print("6 - Get a driver abstract")
+        print("0 - Logout")
+        valid = False
         
-        elif utype == 'o':
-            print("1 - Issue a ticket")
-            print("2 - Find a car owner") 
-            valid = False
-            
-            while (not valid):
-                try:
-                    task = int(input("Enter a number: "))
-                except: # user did not enter a number
-                    print("Please enter a valid option")
+        while (not valid):
+            try:
+                task = int(input("Enter a number: "))
+            except: # user did not enter a number
+                print("Please enter a valid option")
+            else:
+                if (task in range(0,7)): # check if user entered a valid menu option
+                    valid = True
                 else:
-                    if (task in range(1,3)): # check if user entered a valid menu option
-                        valid = True
-                    else:
-                        print("Please enter a valid option")
+                    print("Please enter a valid option")
+    
+    elif utype == 'o':
+        print("1 - Issue a ticket")
+        print("2 - Find a car owner") 
+        print("0 - Logout")
+        valid = False
+        
+        while (not valid):
+            try:
+                task = int(input("Enter a number: "))
+            except: # user did not enter a number
+                print("Please enter a valid option")
+            else:
+                if (task in range(0,3)): # check if user entered a valid menu option
+                    valid = True
+                else:
+                    print("Please enter a valid option")
+        if task != 0:
             task += 6 # officers options actually correlate to options 7 and 8
-        return task
+    return task
 
         
 def register_birth(user_info):
+    global connection, cursor
 
-    print("\nBirth registry")
+    os.system('clear')
+    print("Birth registry")
 
     valid = False
     while(not valid):
@@ -94,10 +106,7 @@ def register_birth(user_info):
     fname = input("First name: ") 
     lname = input("Last name: ")
     regplace = user_info[5]
-
-    valid = False
-    while(not valid):
-        gender = input("Gender: ")
+    gender = input("Gender: ")
 
     m_fname = input("Mothers first name: ")
     m_lname = input("Mothers last name: ")
@@ -138,6 +147,9 @@ def register_birth(user_info):
 		   
     
 def register_marriage(user_info):
+    global connection, cursor
+
+    os.system('clear')
     print("\n Marriage registration.\n")
     valid = False
     while(not valid):
@@ -167,6 +179,10 @@ def register_marriage(user_info):
     connection.commit()
 	
 def renew_reg():
+    global connection, cursor
+
+    os.system('clear')
+
     valid = False
     while(not valid):
         reg_no = input("Enter an existing registration number: ")
@@ -192,6 +208,10 @@ def bill_of_sale():
     pass
 
 def process_payment():
+    global connection, cursor
+
+    os.system('clear')
+
     valid = False
     while(not valid):
         tick_no = input("Enter a ticket number: ")
@@ -221,12 +241,20 @@ def process_payment():
     return
 
 def get_driver_abstract():
+    global connection, cursor
+
+    os.system('clear')
+
     fname = input("Enter first name: ")
     lname = input("Enter last name: ")
     
     pass
 
 def issue_ticket():
+    global connection, cursor
+
+    os.system('clear')
+
     reg_no = input("Enter a registration number: ")
     cursor.execute("SELECT fname, lname, make, model, year, color FROM vehicles, registrations WHERE registrations.vin = vehicles.vin AND regno = ?;", (reg_no, ))
     reg_info = cursor.fetchone()
@@ -289,30 +317,43 @@ def insert_person(fname = None, lname = None):
 def main():
     global connection, cursor
     
-    connect_to_DB()
-    user = get_login()
-    print("Welcome " + user[3])
-    task = display_menu(user[2])
-    if task == 1:
-        register_birth(user)
-    elif task == 2:
-        register_marriage(user)
-    elif task == 3:
-        renew_reg()
-    elif task == 4:
-        bill_of_sale()
-    elif task == 5:
-        process_payment()
-    elif task == 6:
-        get_driver_abstract()
-    elif task == 7:
-        issue_ticket()
-    elif task == 8:
-        find_car_owner()
-        
-    
-    
- 
+    db_connection = False
+    while not db_connection:
+        db_connection, path = connect_to_DB()
+        while db_connection:
+            os.system('clear')
+            print("Sucessfully connected to database: " + path + "\n")
+            user = get_login()
+            logout = False
+            while not logout:
+                os.system('clear')
+                print("Welcome " + user[3] + ".\n")
+                task = display_menu(user[2])
+                if task == 1:
+                    register_birth(user)
+                elif task == 2:
+                    register_marriage(user)
+                elif task == 3:
+                    renew_reg()
+                elif task == 4:
+                    bill_of_sale()
+                elif task == 5:
+                    process_payment()
+                elif task == 6:
+                    get_driver_abstract()
+                elif task == 7:
+                    issue_ticket()
+                elif task == 8:
+                    find_car_owner()
+                elif task == 0:
+                    logout = True
+        else:
+            ans = input("Unable to connect to the specified database. Would you like to try again? (Y for yes, N to exit) ")
+            if ans == 'N':
+                exit()
+            else:
+                os.system('clear')
+
 
 if __name__ == "__main__":
     main()
