@@ -188,8 +188,24 @@ def renew_reg():
     return
 
 def bill_of_sale():
+	
+    print("Process a bill of sale ")
+    vin =input("enter the vin: ")
+    current_owner_fname = input("enter current owner first name: ")
+    current_owner_lname = input("enter current owner last name: ")
+    new_owner_fname = input("enter new owner first name: ")
+    new_owner_lname = input("enter new owner last name: ")
+    new_plate = input("enter new plate number: ")
+    cursor.execute("SELECT * FROM registrations WHERE vin =? AND fname =? AND lname = ?;",(vin,current_owner_fname,current_owner_lname))
+    reg_info = cursor.fetchone()
+    new_reg_nu = unique_registration()
+    new_reg = (new_reg_nu, new_plate, vin, new_owner_fname, new_owner_lname )
+    cursor.execute("INSERT INTO registrations VALUES (?, date('now'), date('now','+1 year'),?,?,?,?) ;", (new_reg))
+    cursor.execute("UPDATE registrations SET expiry = date('now') WHERE regno = ? AND fname = ? AND lname = ?;",(reg_info[0], reg_info[5], reg_info[6]))
+    print("Transfer completed sucessfully!")
+    connection.commit()
+    return
     
-    pass
 
 def process_payment():
     pass
