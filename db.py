@@ -204,8 +204,133 @@ def renew_reg():
     return
 
 def bill_of_sale():
+    os.system('clear')
     
-    pass
+    print("Process a bill of sale ")
+   
+    vin =  input("\nenter  VIN: ")
+    cursor.execute("SELECT * FROM registrations WHERE vin = ? ;" , (vin,))
+    if not cursor.fetchone():
+
+        print("\nVIN doesn't exist or didn't entered!" )
+        print("\nTry aging (press 1)")
+        print("exit (press 2)")
+        print("main menu (press3)")
+ 
+        valid = False
+        while (not valid):
+            try:
+                choice = int(input("\nEnter a number: "))
+            except: 
+                print("Please enter a valid option")
+            else:
+                if(choice in range(1,4)):  
+                    if(choice == 1):
+                        bill_of_sale()
+                    elif (choice == 2):
+                        exit()
+                    elif (choice == 3):
+                        main()
+                    elif (choice == None):
+                        return
+                else:
+                        print("Number entered is not valid, Try again!")
+                 
+    current_owner_fname = input("enter current owner first name: ")
+    cursor.execute("SELECT fname FROM registrations WHERE fname =? ;",(current_owner_fname, ))
+    if not cursor.fetchone():
+
+        print("\nFirst Name doesn't exist or didn't entered!" )
+        print("\nTry aging (press 1)")
+        print("exit (press 2)")
+        print("main menu (press3)")
+ 
+        valid = False
+        while (not valid):
+            try:
+                choice = int(input("\nEnter a number: "))
+            except: 
+                print("Please enter a valid option")
+            else:
+                if(choice in range(1,4)):  
+                    if(choice == 1):
+                        bill_of_sale()
+                    elif (choice == 2):
+                        exit()
+                    elif (choice == 3):
+                        main()
+                    elif (choice == None):
+                        return
+                else:
+                        print("Number entered is not valid, Try again!")
+
+    current_owner_lname = input("enter current owner last name: ")
+    cursor.execute("SELECT lname FROM registrations WHERE lname =? ;" , (current_owner_lname, ))
+    if not cursor.fetchone():
+
+        print("\nLast Name doesn't exist or didn't entered!" )
+        print("\nTry aging (press 1)")
+        print("exit (press 2)")
+        print("main menu (press3)")
+ 
+        valid = False
+        while (not valid):
+            try:
+                choice = int(input("\nEnter a number: "))
+            except: 
+                print("Please enter a valid option")
+            else:
+                if(choice in range(1,4)):  
+                    if(choice == 1):
+                        bill_of_sale()
+                    elif (choice == 2):
+                        exit()
+                    elif (choice == 3):
+                        main()
+                    elif (choice == None):
+                        return
+                else:
+                        print("Number entered is not valid, Try again!")
+        
+    cursor.execute("SELECT * FROM registrations WHERE vin =? AND fname =? AND lname = ? AND expiry < date('now');",(vin,current_owner_fname,current_owner_lname))
+    reg_info = cursor.fetchone()
+    if isinstance(reg_info, type(None)): 
+        print("\n",current_owner_fname," ",current_owner_lname, "is not the most recent owner")
+
+       
+        print("\nTry aging (press 1)")
+        print("exit (press 2)")
+        print("main menu (press3)")
+        valid = False
+        while (not valid):
+            try:
+                choice = int(input("\nEnter a number: "))
+            except: 
+                print("Please enter a valid option")
+            else:
+                if(choice in range(1,4)):  
+                    if(choice == 1):
+                        bill_of_sale()
+                    elif (choice == 2):
+                        exit()
+                    elif (choice == 3):
+                        main()
+                    elif (choice == None):
+                        return
+                else:
+                        print("Number entered is not valid, Try again!")
+     
+    new_owner_fname = input("enter new owner first name: ")
+    new_owner_lname = input("enter new owner last name: ")
+    new_plate = input("enter new plate number: ")
+        
+    new_reg_nu = unique_registration()
+    new_reg = (new_reg_nu, new_plate, vin, new_owner_fname, new_owner_lname )
+    cursor.execute("INSERT INTO registrations VALUES (?, date('now'), date('now','+1 year'),?,?,?,?) ;", (new_reg))
+    cursor.execute("UPDATE registrations SET expiry = date('now') WHERE regno = ? AND fname = ? AND lname = ?;",(reg_info[0], reg_info[5], reg_info[6]))
+    print("Transfer completed sucessfully!")
+    connection.commit()
+    return
 
 def process_payment():
     global connection, cursor
