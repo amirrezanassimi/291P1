@@ -1,0 +1,11 @@
+ os.system('clear')
+    make = input("enter Car's make : ")
+    model = input("enter Car's model : ")
+    year = input("enter Car's production year : ")
+    color = input ("enter Car's color  : ")
+    plate = input("enter Car's plate : ")
+
+    cursor.execute("SELECT r.fname, r.lname , v.make, v.model, v.year, v.color, r.plate, r.regdate, r.expiry From vehicles AS v, registrations AS r WHERE v.year = ? OR v.make LIKE ? OR v.model LIKE ? OR v.color LIKE ? OR r.plate LIKE ? AND v.vin = r.vin; ",(year, make, model, color, plate, ))
+
+    
+    owner_info = cursor.fetchmany(size = 1000)
